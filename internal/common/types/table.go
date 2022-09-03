@@ -1,0 +1,30 @@
+package types
+
+type PAGE_TYPE int32
+
+const (
+	META_PAGE_TYPE PAGE_TYPE = iota
+	DATA_PAGE_TYPE
+)
+
+const (
+	PAGE_TYPE_OFFSET    = 4
+	PREV_PAGE_ID_OFFSET = 8
+	NEXT_PAGE_ID_OFFSET = 12
+)
+
+const (
+	FREE_SPACE_POINTER_OFFSET = 16
+	TUPLE_COUNT_OFFSET        = 20
+)
+
+const (
+	DATA_PAGE_ID_OFFSET = 16
+	TABLE_NAME_OFFSET   = 256
+	COLUMN_COUNT        = 260
+)
+
+const (
+	TUPLE_OFFSET = 4
+	TUPLE_SIZE   = 4
+)
