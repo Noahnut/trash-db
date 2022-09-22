@@ -147,7 +147,15 @@ getPage:
 		goto getPage
 	}
 
-	return dataTablePage.InsertTuple(value, tupleSize)
+	if err := dataTablePage.InsertTuple(value, tupleSize); err != nil {
+		return err
+	}
+
+	t.bufferPoolManager.UnpinPage(dataTablePageID)
+
+	t.bufferPoolManager.FlushPage(dataTablePageID)
+
+	return nil
 }
 
 func (t *TableManager) GetTuples(tableName string) ([][]*tuple.Value, error) {

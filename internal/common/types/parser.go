@@ -1,0 +1,13 @@
+package types
+
+const (
+	SELECT_QUERY_TYPE = "SELECT"
+	INSERT_QUERY_TYPE = "INSERT"
+)
+
+const (
+	QUERY_CHAR_STAR  = "*"
+	QUERY_CHAR_FROM  = "FROM"
+	QUERY_CHAR_LIMIT = "LIMIT"
+	QUERY_CHAR_INTO  = "INTO"
+)

@@ -6,15 +6,16 @@ import (
 	"go-db/internal/catalog/schema"
 	"go-db/internal/catalog/table"
 	"go-db/internal/common/types"
+	"go-db/internal/execution/executor"
 	"go-db/internal/storage/disk"
 	"log"
-	"time"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type DB struct {
-	bufferPool   *buffer.BufferPoolManager
-	diskManager  *disk.Disk
-	tableManager *table.TableManager
+	executor *executor.Executor
 }
 
 func InitDatabase(dbBaseName string, bufferPoolSize int32) *DB {
@@ -26,14 +27,9 @@ func InitDatabase(dbBaseName string, bufferPoolSize int32) *DB {
 
 	bufferPool := buffer.NewBufferPoolManager(buffer.NewLRUReplacer(), diskManager, bufferPoolSize)
 
-	d := &DB{
-		diskManager: diskManager,
-		bufferPool:  bufferPool,
-	}
-
 	tablePageMap := make(map[string]types.Page_id_t)
 
-	pageNumber := d.diskManager.GetPageNumber()
+	pageNumber := diskManager.GetPageNumber()
 
 	for i := 0; i < int(pageNumber); i++ {
 		diskPage, err := bufferPool.FetchPage(types.Page_id_t(i))
@@ -48,14 +44,28 @@ func InitDatabase(dbBaseName string, bufferPoolSize int32) *DB {
 		}
 	}
 
-	d.tableManager = table.NewTableManager(bufferPool, tablePageMap)
+	tableManager := table.NewTableManager(bufferPool, tablePageMap)
+
+	d := &DB{
+		executor: executor.NewExecutor(bufferPool, diskManager, tableManager),
+	}
 
 	return d
 }
 
 func (d *DB) RunDB() {
 	fmt.Println("Start Run go-DB")
-	for {
-		time.Sleep(10 * time.Second)
-	}
+	ginServer := gin.Default()
+
+	ginServer.GET("/query", func(ctx *gin.Context) {
+		response, err := d.executor.QueryExecutor(ctx.Query("query"))
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, err)
+		} else {
+			ctx.JSON(http.StatusOK, response)
+		}
+	})
+
+	ginServer.Run(":1234")
 }

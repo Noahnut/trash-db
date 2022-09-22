@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"go-db/internal/catalog/schema"
 	"go-db/internal/common/types"
+	"go-db/internal/utils"
 	"math"
 )
 
@@ -58,6 +59,7 @@ func TupleDeserialization(schema *schema.Schema, data []byte) []*Value {
 		case types.VAR_CHAR_TYPE:
 			v.VAR_CHAR = make([]byte, v.size)
 			copy(v.VAR_CHAR, data[byteOffset:byteOffset+int(v.size)])
+			v.VAR_CHAR = utils.TrimByteEmptySpace(v.VAR_CHAR)
 		case types.FLOAT_TYPE:
 			v.FLOAT = math.Float64frombits(binary.BigEndian.Uint64(data[byteOffset : byteOffset+int(v.size)]))
 		}

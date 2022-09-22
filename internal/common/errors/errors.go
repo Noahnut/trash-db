@@ -22,3 +22,8 @@ var (
 var (
 	ErrIndexOutOfRange = errors.New("index out of range")
 )
+
+var (
+	ErrSyntax         = errors.New("syntax error")
+	ErrColumnNotExist = errors.New("column not exist")
+)

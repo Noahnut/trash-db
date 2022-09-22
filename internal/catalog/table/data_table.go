@@ -124,6 +124,7 @@ func (p *DataTable) InsertTuple(value []*tuple.Value, tupleSize int32) error {
 	binary.BigEndian.PutUint32(p.GetData()[tupleSizeEnd:tupleOffsetEnd], uint32(tupleSize))
 
 	p.SetTupleCount(tupleCount + 1)
+
 	return nil
 }
 
