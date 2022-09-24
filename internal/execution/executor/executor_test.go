@@ -8,6 +8,7 @@ import (
 	"go-db/internal/common/types"
 	"go-db/internal/storage/disk"
 	"log"
+	"reflect"
 	"testing"
 )
 
@@ -187,5 +188,59 @@ func Test_InsertExecutor(t *testing.T) {
 
 	if string(result) != expectResult {
 		t.Error("get wrong response", string(result))
+	}
+}
+
+func Test_CreateExecutor(t *testing.T) {
+	diskManager, err := disk.NewDiskStorage("test.db")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bufferPool := buffer.NewBufferPoolManager(buffer.NewLRUReplacer(), diskManager, 1024)
+
+	tableManager := table.NewTableManager(bufferPool, make(map[string]types.Page_id_t))
+
+	executor := NewExecutor(bufferPool, diskManager, tableManager)
+
+	_, err = executor.QueryExecutor("CREATE TABLE table_name (column1 VARCHAR(10),column2 int,column3 bool, column4 BIGINT, column5 float);")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := tableManager.GetTableMeta("table_name")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectResult := []*column.Column{
+		{
+			ColumnType: types.VAR_CHAR_TYPE,
+			Name:       "column1",
+			Size:       10,
+		}, {
+			ColumnType: types.INT_TYPE,
+			Name:       "column2",
+			Size:       4,
+		}, {
+			ColumnType: types.BOOL_TYPE,
+			Name:       "column3",
+			Size:       4,
+		}, {
+			ColumnType: types.LONG_INT_TYPE,
+			Name:       "column4",
+			Size:       8,
+		}, {
+			ColumnType: types.FLOAT_TYPE,
+			Name:       "column5",
+			Size:       8,
+		},
+	}
+
+	if !reflect.DeepEqual(expectResult, result) {
+		t.Error("create table wrong")
 	}
 }

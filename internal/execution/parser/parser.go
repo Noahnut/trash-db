@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"go-db/internal/common/types"
 	"go-db/internal/execution/ast"
 	"strings"
 	"text/scanner"
@@ -29,12 +30,12 @@ func ParseSQLQuery(query string) (*ast.Ast, error) {
 	queryType := scan.TokenText()
 
 	switch strings.ToUpper(queryType) {
-	case SELECT:
+	case types.SELECT_QUERY_TYPE:
 		_ast, err = ast.SelectAst(query, &scan)
-
-	case INSERT:
+	case types.INSERT_QUERY_TYPE:
 		_ast, err = ast.InsertAst(query, &scan)
-	case UPDATE:
+	case types.CREATE_QUERY_TYPE:
+		_ast, err = ast.CreateTableAst(query, &scan)
 	}
 
 	if err != nil {

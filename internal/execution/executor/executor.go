@@ -2,7 +2,9 @@ package executor
 
 import (
 	"encoding/json"
+	"fmt"
 	"go-db/internal/buffer"
+	"go-db/internal/catalog/column"
 	"go-db/internal/catalog/table"
 	"go-db/internal/catalog/tuple"
 	"go-db/internal/common/errors"
@@ -10,6 +12,7 @@ import (
 	"go-db/internal/execution/ast"
 	"go-db/internal/execution/parser"
 	"go-db/internal/storage/disk"
+	"strings"
 )
 
 type Executor struct {
@@ -45,6 +48,12 @@ func (e *Executor) QueryExecutor(query string) ([]byte, error) {
 		}
 	} else if ast.Type == types.INSERT_QUERY_TYPE {
 		response, err = e.insertQueryExecutor(ast)
+
+		if err != nil {
+			return nil, err
+		}
+	} else if ast.Type == types.CREATE_QUERY_TYPE {
+		response, err = e.createQueryExecutor(ast)
 
 		if err != nil {
 			return nil, err
@@ -127,6 +136,42 @@ func (e *Executor) insertQueryExecutor(ast *ast.Ast) ([]byte, error) {
 	}
 
 	err = e.tableManager.InsertTuple(ast.Table, values)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (e *Executor) createQueryExecutor(ast *ast.Ast) ([]byte, error) {
+	tableColumns := make([]*column.Column, len(ast.Column))
+
+	for i, col := range ast.Column {
+		typeSize, columnType := int32(0), types.INVALID_TYPE
+
+		switch ast.ColumnType[i] {
+		case types.COLUMN_TYPE_BOOL:
+			columnType = types.BOOL_TYPE
+		case types.COLUMN_TYPE_FLOAT:
+			columnType = types.FLOAT_TYPE
+		case types.COLUMN_TYPE_INT:
+			columnType = types.INT_TYPE
+		case types.COLUMN_TYPE_LONGINT:
+			columnType = types.LONG_INT_TYPE
+		}
+
+		if columnType == types.INVALID_TYPE {
+			if strings.HasPrefix(ast.ColumnType[i], types.COLUMN_TYPE_VAR_CHAR) {
+				columnType = types.VAR_CHAR_TYPE
+				fmt.Sscanf(ast.ColumnType[i], types.COLUMN_TYPE_VAR_CHAR+"(%d)", &typeSize)
+			}
+		}
+
+		tableColumns[i] = column.NewColumn(columnType, typeSize, col)
+	}
+
+	err := e.tableManager.CreateNewTable(ast.Table, tableColumns)
 
 	if err != nil {
 		return nil, err

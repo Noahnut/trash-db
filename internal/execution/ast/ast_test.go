@@ -127,7 +127,37 @@ func Test_InsertAst(t *testing.T) {
 		t.Error("get column name wrong")
 	}
 
-	if !reflect.DeepEqual(ast.Value, []string{"value1", "value2", "value3"}) {
-		t.Error("get value wrong")
+}
+
+func Test_CreateAst(t *testing.T) {
+	query := "CREATE TABLE table_name (column1 VARCHAR(10),column2 int,column3 bool, column4 BIGINT, column5 float);"
+
+	s := scanner.Scanner{}
+	s.Init(strings.NewReader(query))
+
+	if token := s.Scan(); token == scanner.EOF {
+		t.Error("scan wrong")
+	}
+
+	ast, err := CreateTableAst(query, &s)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if ast.Type != types.CREATE_QUERY_TYPE {
+		t.Error("create get the wrong type")
+	}
+
+	if ast.Table != "table_name" {
+		t.Error("create get the wrong table name")
+	}
+
+	if !reflect.DeepEqual(ast.Column, []string{"column1", "column2", "column3", "column4", "column5"}) {
+		t.Error("get the wrong column name")
+	}
+
+	if !reflect.DeepEqual(ast.ColumnType, []string{"VARCHAR(10)", "INT", "BOOL", "BIGINT", "FLOAT"}) {
+		t.Error("get the wrong column type", ast.ColumnType)
 	}
 }
