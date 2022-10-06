@@ -58,6 +58,7 @@ func (p *BufferPoolManager) FetchPage(pageID types.Page_id_t) (*page.Page, error
 			return nil, err
 		}
 		copy(page.GetData(), data)
+		p.PageTable[pageID] = frame_id
 	}
 
 	page := p.BufferPool[frame_id]

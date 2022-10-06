@@ -61,9 +61,9 @@ func (d *DB) RunDB() {
 		response, err := d.executor.QueryExecutor(ctx.Query("query"))
 
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, err)
+			ctx.JSON(http.StatusBadRequest, err.Error())
 		} else {
-			ctx.JSON(http.StatusOK, response)
+			ctx.JSON(http.StatusOK, string(response))
 		}
 	})
 

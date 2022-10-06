@@ -1,6 +1,7 @@
 package table
 
 import (
+	"fmt"
 	"go-db/internal/buffer"
 	"go-db/internal/catalog/column"
 	"go-db/internal/catalog/schema"
@@ -67,6 +68,8 @@ func (t *TableManager) CreateNewTable(tableName string, columns []*column.Column
 		metaPage.AddColumn(c)
 	}
 
+	metaPage.SetTableName(tableName)
+
 	t.RLock.Lock()
 	t.TableMetaPageID[tableName] = metaPage.GetPageID()
 	t.RLock.Unlock()
@@ -80,7 +83,8 @@ func (t *TableManager) CreateNewTable(tableName string, columns []*column.Column
 
 	metaPage.SetDataPageID(dataPage.GetPageID())
 	GetDataTable(dataPage).DataTableInit()
-	defer t.bufferPoolManager.FlushPage(dataPage.GetPageID())
+	t.bufferPoolManager.FlushPage(dataPage.GetPageID())
+	t.bufferPoolManager.FlushPage(metaPage.GetPageID())
 
 	return nil
 }
@@ -151,10 +155,16 @@ getPage:
 		return err
 	}
 
+	tempTuples := dataTablePage.GetTuple(metaTable)
+
+	for _, t := range tempTuples {
+		for _, a := range t {
+			fmt.Println(*a)
+		}
+	}
+
 	t.bufferPoolManager.UnpinPage(dataTablePageID)
-
 	t.bufferPoolManager.FlushPage(dataTablePageID)
-
 	return nil
 }
 

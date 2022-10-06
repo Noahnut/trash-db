@@ -14,7 +14,7 @@ type Disk struct {
 
 func NewDiskStorage(DBFileName string) (*Disk, error) {
 
-	file, err := os.OpenFile(DBFileName, os.O_RDWR|os.O_CREATE, 0755)
+	file, err := os.OpenFile(DBFileName, os.O_RDWR|os.O_CREATE|os.O_SYNC, 0755)
 
 	if err != nil {
 		return nil, err
